@@ -1,0 +1,77 @@
+/**
+ * index.css
+ * ---------
+ * Global baseline styles injected by main.jsx before any component renders.
+ * These rules apply to EVERY page and are intentionally minimal — they set
+ * typography defaults, the colour scheme, and a few layout resets so that
+ * component-level styles in App.css start from a clean, consistent baseline.
+ *
+ * The `@media (prefers-color-scheme: dark)` block provides automatic dark-mode
+ * support without any JavaScript; the browser handles the switch.
+ */
+
+/* ─── Typography & colour tokens ─────────────────────────────────────────── */
+:root {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  /* Respect OS-level dark/light preference for the colour-scheme meta hint */
+  color-scheme: light dark;
+  color: #333;
+  background-color: #f8f9fa;
+
+  /* Disable synthetic bold/italic so fonts render at their true weight */
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─── Box model & spacing reset ──────────────────────────────────────────── */
+* {
+  /* border-box means padding and border are included in declared width/height */
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;   /* Prevents the layout collapsing on very narrow screens */
+  min-height: 100vh;  /* Ensures the background fills even short pages */
+}
+
+/* ─── Heading scale ───────────────────────────────────────────────────────── */
+h1 {
+  font-size: 2.5rem;
+  line-height: 1.2;
+}
+
+h2 {
+  font-size: 1.8rem;
+  line-height: 1.3;
+}
+
+h3 {
+  font-size: 1.3rem;
+  line-height: 1.4;
+}
+
+/* ─── Dark-mode overrides ─────────────────────────────────────────────────── */
+/* Applied automatically by the browser when the OS is in dark mode */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color: #f8f9fa;
+    background-color: #1a1a2e;
+  }
+
+  /* Slightly lighter button to keep contrast against the dark background */
+  button {
+    background-color: #3f72af;
+  }
+
+  button:hover {
+    background-color: #1a6fb0;
+  }
+}
