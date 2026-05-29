@@ -1,8 +1,5 @@
 # Choose Your Own Adventure AI
 
-An AI-powered interactive story generator. Enter a theme, and the app uses an LLM to generate a branching choose-your-own-adventure story. Play through it in your browser, restart as many times as you like, or share the URL with anyone.
+An AI-powered full-stack web application that generates unique, branching choose-your-own-adventure stories on demand. Enter a theme (e.g. "pirates", "space exploration", "medieval fantasy"), and a GPT-4o-mini model constructs a complete story graph — multiple paths, multiple endings — that you can play through in the browser.
 
-## How it works
-
-1. The React frontend sends the user's theme to the FastAPI backend.
-2. The backend c
+Built 
