@@ -1,17 +1,8 @@
-# AdventureStoryAI
-A full stack choose your own adventure web application using LangChain, FastAPI/React, 
+# Choose Your Own Adventure AI
 
-- From Task-Management/backend , run following:
+An AI-powered interactive story generator. Enter a theme, and the app uses an LLM to generate a branching choose-your-own-adventure story. Play through it in your browser, restart as many times as you like, or share the URL with anyone.
 
-> source .venv/Scripts/activate
+## How it works
 
-2. Install dependencies
-
- - From TM/backend , run:
-> pip install -r requirements.txt
-
-3. Launch API:
-
-> uvicorn src.main:app --reload
-
- - append "docs" behind site IP
+1. The React frontend sends the user's theme to the FastAPI backend.
+2. The backend c
