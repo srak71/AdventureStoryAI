@@ -1,0 +1,17 @@
+# Vite output
+dist
+dist-ssr
+
+# Dependencies
+node_modules
+
+# Local env files (contain secrets / local overrides)
+.env.local
+.env.*.local
+
+# Editor
+.vscode
+.idea
+
+# Misc
+*.log
