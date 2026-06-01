@@ -11,14 +11,17 @@ STORY_PROMPT = """
 
                 Story structure requirements:
                 - Each node should have 2-3 options except for ending nodes
-                - The story should be 3-4 levels deep (including root node)
-                - Add variety in the path lengths (some end earlier, some later)
-                - Make sure there's at least one winning path
+                - The story MUST be 6-8 levels deep (including root node) — this is critical
+                - Do NOT place any ending node before level 5. Players must journey through at least 5 decision points before any path can end
+                - Add variety in path lengths: some paths end at level 5-6, some at level 7-8
+                - Make sure there is at least one winning path that goes the full depth
+                - Each node's content should be 2-4 sentences — vivid, atmospheric, and advancing the plot
+                - Endings should feel earned and consequential, not abrupt
 
                 Output your story in this exact JSON structure:
                 {format_instructions}
 
-                Don't simplify or omit any part of the story structure. 
+                Don't simplify or omit any part of the story structure.
                 Don't add any text outside of the JSON structure.
                 """
 
