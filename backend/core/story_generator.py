@@ -40,6 +40,10 @@ class StoryGenerator:
         if hasattr(raw_response, "content"):
             response_text = raw_response.content
 
+        # qwen3 reasoning models prepend <think>...</think> before the JSON output
+        import re
+        response_text = re.sub(r"<think>.*?</think>", "", response_text, flags=re.DOTALL).strip()
+
         story_structure = story_parser.parse(response_text)
 
         story_db = Story(title=story_structure.title, session_id=session_id)
