@@ -1,10 +1,10 @@
 import uuid
 from typing import Optional
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, Cookie, Response, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, Cookie, Response
 from sqlalchemy.orm import Session
 
-from db.database import get_db, SessionLocal
+from db.database import get_db
 from models.story import Story, StoryNode
 from models.job import StoryJob
 from schemas.story import (
@@ -18,6 +18,7 @@ router = APIRouter(
     tags=["stories"]
 )
 
+
 def get_session_id(session_id: Optional[str] = Cookie(None)):
     if not session_id:
         session_id = str(uuid.uuid4())
@@ -27,11 +28,15 @@ def get_session_id(session_id: Optional[str] = Cookie(None)):
 @router.post("/create", response_model=StoryJobResponse)
 def create_story(
         request: CreateStoryRequest,
-        background_tasks: BackgroundTasks,
         response: Response,
         session_id: str = Depends(get_session_id),
         db: Session = Depends(get_db)
 ):
+    """
+    Synchronously generate a story and return a completed job.
+    Generation happens inline so the response already contains story_id
+    when it returns -- the frontend's first poll will find it done.
+    """
     response.set_cookie(key="session_id", value=session_id, httponly=True)
 
     job_id = str(uuid.uuid4())
@@ -40,47 +45,26 @@ def create_story(
         job_id=job_id,
         session_id=session_id,
         theme=request.theme,
-        status="pending"
+        status="processing"
     )
     db.add(job)
     db.commit()
 
-    background_tasks.add_task(
-        generate_story_task,
-        job_id=job_id,
-        theme=request.theme,
-        session_id=session_id
-    )
-
-    return job
-
-
-def generate_story_task(job_id: str, theme: str, session_id: str):
-    db = SessionLocal()
-
     try:
-        job = db.query(StoryJob).filter(StoryJob.job_id == job_id).first()
+        story = StoryGenerator.generate_story(db, session_id, request.theme)
+        job.story_id = story.id
+        job.status = "completed"
+        job.completed_at = datetime.now()
+    except Exception as e:
+        job.status = "failed"
+        job.completed_at = datetime.now()
+        job.error = str(e)
+        db.commit()
+        raise HTTPException(status_code=500, detail=str(e))
 
-        if not job:
-            return
-
-        try:
-            job.status = "processing"
-            db.commit()
-
-            story = StoryGenerator.generate_story(db, session_id, theme)
-
-            job.story_id = story.id
-            job.status = "completed"
-            job.completed_at = datetime.now()
-            db.commit()
-        except Exception as e:
-            job.status = "failed"
-            job.completed_at = datetime.now()
-            job.error = str(e)
-            db.commit()
-    finally:
-        db.close()
+    db.commit()
+    db.refresh(job)
+    return job
 
 
 @router.get("/{story_id}/complete", response_model=CompleteStoryResponse)
