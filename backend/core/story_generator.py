@@ -1,10 +1,8 @@
 import os
 import re
+import json
+from groq import Groq
 from sqlalchemy.orm import Session
-
-from langchain_openai import ChatOpenAI
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.output_parsers import PydanticOutputParser
 
 from core.prompts import STORY_PROMPT
 from models.story import Story, StoryNode
@@ -12,43 +10,37 @@ from core.models import StoryLLMResponse, StoryNodeLLM
 
 
 def _extract_json(text: str) -> str:
-    """Strip reasoning-model preamble and extract the JSON block."""
-    # Try stripping <think>...</think> first
+    """Strip reasoning-model preamble and return the JSON block."""
     stripped = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL).strip()
     if stripped:
         return stripped
-    # Fallback: if </think> was missing (truncated), grab everything from the first {
     idx = text.find("{")
-    if idx != -1:
-        return text[idx:]
-    return text
+    return text[idx:] if idx != -1 else text
 
 
 class StoryGenerator:
 
     @classmethod
-    def _get_llm(cls):
-        return ChatOpenAI(
+    def generate_story(cls, db: Session, session_id: str, theme: str = "fantasy") -> Story:
+        client = Groq(api_key=os.environ["GROQ_API_KEY"])
+
+        from langchain_core.output_parsers import PydanticOutputParser
+        story_parser = PydanticOutputParser(pydantic_object=StoryLLMResponse)
+        format_instructions = story_parser.get_format_instructions()
+
+        response = client.chat.completions.create(
             model="qwen/qwen3-32b",
-            api_key=os.environ["GROQ_API_KEY"],
-            base_url="https://api.groq.com/openai/v1",
+            messages=[
+                {"role": "system", "content": STORY_PROMPT.replace("{format_instructions}", format_instructions)},
+                {"role": "user", "content": f"Create the story with this theme: {theme}"}
+            ],
             temperature=0.9,
         )
 
-    @classmethod
-    def generate_story(cls, db: Session, session_id: str, theme: str = "fantasy") -> Story:
-        llm = cls._get_llm()
-        story_parser = PydanticOutputParser(pydantic_object=StoryLLMResponse)
-        prompt = ChatPromptTemplate.from_messages([
-            ("system", STORY_PROMPT),
-            ("human", f"Create the story with this theme: {theme}")
-        ]).partial(format_instructions=story_parser.get_format_instructions())
+        raw_text = response.choices[0].message.content
+        json_text = _extract_json(raw_text)
+        story_structure = story_parser.parse(json_text)
 
-        raw_response = llm.invoke(prompt.invoke({}))
-        response_text = raw_response.content if hasattr(raw_response, "content") else raw_response
-        response_text = _extract_json(response_text)
-
-        story_structure = story_parser.parse(response_text)
         story_db = Story(title=story_structure.title, session_id=session_id)
         db.add(story_db)
         db.flush()
